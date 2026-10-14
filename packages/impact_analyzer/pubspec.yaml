@@ -1,7 +1,17 @@
 name: impact_analyzer
 description: Core impact analysis engine for Dart/Flutter change blast radius, severity, and confidence.
 version: 0.1.0
-publish_to: none
+
+repository: https://github.com/RajKavadia/impact-analyzer
+issue_tracker: https://github.com/RajKavadia/impact-analyzer/issues
+documentation: https://github.com/RajKavadia/impact-analyzer#readme
+
+topics:
+  - analyzer
+  - static-analysis
+  - dependency-graph
+  - refactoring
+  - developer-tools
 
 environment:
   sdk: ^3.13.0

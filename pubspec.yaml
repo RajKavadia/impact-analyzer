@@ -1,6 +1,10 @@
 name: impact_analyzer_workspace
 description: Monorepo workspace for Impact Analyzer (Dart/Flutter change impact analysis).
 publish_to: none
+version: 0.1.0
+
+repository: https://github.com/RajKavadia/impact-analyzer
+issue_tracker: https://github.com/RajKavadia/impact-analyzer/issues
 
 environment:
   sdk: ^3.13.0

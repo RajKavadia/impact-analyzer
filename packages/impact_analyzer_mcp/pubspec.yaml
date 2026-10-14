@@ -1,13 +1,22 @@
 name: impact_analyzer_mcp
 description: MCP stdio server exposing read-only Impact Analyzer tools to AI agents.
 version: 0.1.0
-publish_to: none
+
+repository: https://github.com/RajKavadia/impact-analyzer
+issue_tracker: https://github.com/RajKavadia/impact-analyzer/issues
+documentation: https://github.com/RajKavadia/impact-analyzer#readme
+
+topics:
+  - mcp
+  - ai
+  - static-analysis
+  - developer-tools
 
 environment:
   sdk: ^3.13.0
 
 dependencies:
-  impact_analyzer: any
+  impact_analyzer: ^0.1.0
 
 dev_dependencies:
   lints: ^6.1.0
