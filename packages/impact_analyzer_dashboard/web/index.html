@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Impact Analyzer</title>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<div class="ambient" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-name">Impact Analyzer</span>
+  </div>
+  <nav class="topbar-actions">
+    <span id="repo-path" class="repo-path" title="Analyzed repository"></span>
+    <button id="btn-reanalyze" class="btn btn-primary" type="button">Re-analyze</button>
+    <button id="btn-export" class="btn" type="button" title="Copy the full ImpactReport JSON">Export JSON</button>
+  </nav>
+</header>
+
+<main class="stage">
+  <!-- Severity hero: the single most important signal, readable instantly. -->
+  <section class="hero" id="hero">
+    <div class="hero-band">
+      <div class="hero-band-label">blast radius</div>
+      <div class="hero-band-value" id="severity-band">–</div>
+      <div class="hero-score">
+        <span id="severity-score">–</span>
+        <small>score</small>
+      </div>
+    </div>
+    <div class="hero-detail">
+      <p class="hero-line" id="hero-line">Loading analysis…</p>
+      <ul class="rationale" id="rationale"></ul>
+      <div class="hero-flags">
+        <span class="chip" id="confidence-chip" title="How trustworthy this analysis is">confidence –</span>
+        <span class="chip chip-muted" id="git-chip">–</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Metrics strip -->
+  <section class="metrics" id="metrics" aria-label="Impact metrics"></section>
+
+  <!-- Main split: graph + file lists -->
+  <section class="workspace">
+    <div class="panel panel-graph">
+      <div class="panel-head">
+        <h2>Impact graph</h2>
+        <div class="panel-tools">
+          <div class="view-tabs" id="view-tabs" role="tablist" aria-label="Graph view">
+            <button class="view-tab is-active" data-view="layered" role="tab" type="button"
+              title="Tiered by blast depth, rooted at changed files">Layered</button>
+            <button class="view-tab" data-view="sugiyama" role="tab" type="button"
+              title="ELK Sugiyama layout with edge-crossing minimisation">Sugiyama</button>
+            <button class="view-tab" data-view="rings" role="tab" type="button"
+              title="Concentric blast-radius rings around the changed files">Rings</button>
+            <button class="view-tab" data-view="matrix" role="tab" type="button"
+              title="Files x files grid, opacity by reference count">Matrix</button>
+            <button class="view-tab" data-view="tree" role="tab" type="button"
+              title="Collapsible directory outline with per-subtree impact counts">Tree</button>
+          </div>
+          <div class="panel-tools" id="graph-toggles">
+            <label class="toggle">
+              <input type="checkbox" id="toggle-files" checked />
+              <span>files</span>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-symbols" />
+              <span>symbols</span>
+            </label>
+          </div>
+          <button id="btn-relayout" class="btn btn-ghost" type="button">Re-layout</button>
+          <button id="btn-clear-selection" class="btn btn-ghost" type="button">Clear</button>
+          <span class="truncation-badge" id="truncation-badge" hidden>truncated</span>
+        </div>
+      </div>
+      <div class="graph-legend" id="graph-legend">
+        <span class="legend-title">blast depth</span>
+        <span class="legend-item"><i style="background:#58a6ff"></i>changed</span>
+        <span class="legend-item"><i style="background:#f2545b"></i>1 hop</span>
+        <span class="legend-item"><i style="background:#f0883e"></i>2 hops</span>
+        <span class="legend-item"><i style="background:#d9a441"></i>3 hops</span>
+        <span class="legend-item"><i style="background:#6e7681"></i>4+ hops</span>
+        <span class="legend-spacer"></span>
+        <span class="view-status" id="view-status"></span>
+      </div>
+      <div id="graph" class="graph"></div>
+      <p class="graph-empty" id="graph-empty">
+        Nothing to map. Make a change in your working tree, then hit Re-analyze.
+      </p>
+      <p class="graph-hint">
+        Click a node to focus it. Selection stays in sync with the file tables.
+      </p>
+    </div>
+
+    <div class="panel panel-files">
+      <div class="panel-head">
+        <div class="tabs" role="tablist">
+          <button class="tab is-active" data-tab="impacted" role="tab" type="button">
+            Impacted <span class="count" id="count-impacted">0</span>
+          </button>
+          <button class="tab" data-tab="changed" role="tab" type="button">
+            Changed <span class="count" id="count-changed">0</span>
+          </button>
+          <button class="tab" data-tab="warnings" role="tab" type="button">
+            Notes <span class="count" id="count-warnings">0</span>
+          </button>
+        </div>
+        <input id="file-filter" class="filter" type="search" placeholder="filter paths…" />
+      </div>
+
+      <div class="table-wrap" data-pane="impacted">
+        <table class="files">
+          <thead>
+            <tr><th>relation</th><th>path</th><th>impacted symbols</th><th>reason</th></tr>
+          </thead>
+          <tbody id="impacted-body"></tbody>
+        </table>
+      </div>
+
+      <div class="table-wrap" data-pane="changed" hidden>
+        <table class="files">
+          <thead>
+            <tr><th>status</th><th>path</th><th>symbols</th><th></th></tr>
+          </thead>
+          <tbody id="changed-body"></tbody>
+        </table>
+      </div>
+
+      <div class="table-wrap notes-wrap" data-pane="warnings" hidden>
+        <div id="notes-body" class="notes"></div>
+      </div>
+
+      <p class="table-empty" id="table-empty" hidden>No rows.</p>
+    </div>
+  </section>
+
+  <!-- Plan lab -->
+  <section class="panel panel-plan">
+    <div class="panel-head">
+      <h2>Plan lab</h2>
+      <span class="panel-sub">Estimate impact <em>before</em> edits are applied</span>
+    </div>
+    <div class="plan-body">
+      <textarea id="plan-input" spellcheck="false"
+        placeholder="Paste a plan as markdown or JSON, e.g.
+
+{
+  &quot;steps&quot;: [
+    { &quot;files&quot;: [&quot;lib/src/auth/token_service.dart&quot;],
+      &quot;symbols&quot;: [&quot;TokenService.refreshToken&quot;] }
+  ]
+}"></textarea>
+      <div class="plan-side">
+        <button id="btn-run-plan" class="btn btn-primary" type="button">Run plan</button>
+        <button id="btn-sample-plan" class="btn btn-ghost" type="button">Insert sample</button>
+        <div id="plan-result" class="plan-result">
+          <p class="plan-empty">No plan analysed yet.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Agent surface -->
+  <section class="panel panel-agent">
+    <div class="panel-head">
+      <h2>Agent access</h2>
+      <div class="panel-tools">
+        <button id="btn-copy-contract" class="btn btn-ghost" type="button">Copy API contract</button>
+        <button id="btn-copy-report" class="btn btn-ghost" type="button">Copy report JSON</button>
+      </div>
+    </div>
+    <p class="panel-sub">
+      This dashboard is also the machine-readable surface for AI agents. Same engine as the CLI and
+      MCP server, loopback only, no outbound calls.
+    </p>
+    <pre id="agent-contract" class="contract"></pre>
+  </section>
+</main>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="/vendor/cytoscape.min.js"></script>
+<script src="/vendor/elk.bundled.js"></script>
+<script src="/views.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

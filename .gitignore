@@ -1,0 +1,23 @@
+# Impact Analyzer cache (created on analysis runs) and the rest of the
+# Dart tool state (package_config.json holds machine-specific paths).
+.dart_tool/
+
+# Dart / Flutter standard ignores
+.packages
+build/
+coverage/
+doc/api/
+pubspec.lock
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# The sample app is a real git repository on purpose: GitDiffCollector needs
+# history, a branch and a dirty index to analyse. A directory containing .git
+# can only enter this repo as a gitlink (submodule), which would drop the
+# fixture sources, and .gitignore cannot prevent that. So the fixture is
+# generated instead of tracked: run tools/bootstrap_fixture.ps1.
+fixtures/sample_app/

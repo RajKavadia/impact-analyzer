@@ -1,0 +1,15 @@
+name: impact_analyzer_workspace
+description: Monorepo workspace for Impact Analyzer (Dart/Flutter change impact analysis).
+publish_to: none
+
+environment:
+  sdk: ^3.13.0
+
+workspace:
+  - packages/impact_analyzer
+  - packages/impact_analyzer_cli
+  - packages/impact_analyzer_mcp
+  - packages/impact_analyzer_dashboard
+
+dev_dependencies:
+  lints: ^6.1.0
